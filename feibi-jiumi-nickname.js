@@ -94,10 +94,15 @@ export class feibiJiumiNickname extends plugin {
       }
     })
 
-    // Yunzai 启动/热加载后稍等适配器完成登录，再更新一次。
-    setTimeout(() => updateAllBotNicknames('startup').catch(err => {
-      logger.error(`[菲比啾咪昵称] 启动更新失败：${err?.message || err}`)
-    }), 30000)
+    if (!globalThis.__feibiJiumiNicknameStartupTimer) {
+      // Yunzai 启动/热加载后稍等适配器完成登录，再更新一次。
+      globalThis.__feibiJiumiNicknameStartupTimer = setTimeout(() => {
+        globalThis.__feibiJiumiNicknameStartupTimer = null
+        updateAllBotNicknames('startup').catch(err => {
+          logger.error(`[菲比啾咪昵称] 启动更新失败：${err?.message || err}`)
+        })
+      }, 30000)
+    }
   }
 
   async hourlyUpdate () {
