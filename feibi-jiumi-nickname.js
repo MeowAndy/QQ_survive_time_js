@@ -119,7 +119,7 @@ export class feibiJiumiNickname extends plugin {
     if (operatorId && operatorId === selfId) return false
 
     const { duration } = await updateAllBotNicknames('poke')
-    await e.reply(`啾？菲比已经啾咪${duration}啦～`)
+    await e.reply(`嗷？凌阳已经嗷呜${duration}啦~嗷呜~`)
     return true
   }
 }
