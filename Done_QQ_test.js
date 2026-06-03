@@ -323,6 +323,8 @@ export class DoneQQOfflineMail extends plugin {
     const entries = Object.entries(data.subscriptions)
     if (!entries.length) return e.reply('当前没有掉线通知订阅，无法测试。')
 
+    await e.reply(`🧪 已触发掉线测试邮件，准备给 ${entries.length} 个已订阅账号发送测试邮件，请稍等...`)
+
     const results = []
     for (const [qq, item] of entries) {
       if (!item?.email) {
