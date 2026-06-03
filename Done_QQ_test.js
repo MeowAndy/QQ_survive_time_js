@@ -2,6 +2,7 @@
 // Yunzai 插件：订阅 QQ 掉线通知，触发掉线时发送邮件 + 群通知
 //
 // 指令：
+//   #订阅掉线帮助
 //   #订阅掉线 QQ [QQ邮箱]
 //   #取消订阅掉线 QQ
 //   #掉线订阅列表
@@ -306,12 +307,49 @@ export class DoneQQOfflineMail extends plugin {
       event: 'message',
       priority: 500,
       rule: [
+        { reg: '^#?订阅掉线帮助$', fnc: 'helpOfflineSubscriptions' },
         { reg: '^#?订阅掉线\\s+(\\d{5,12})(?:\\s+.+)?$', fnc: 'subscribeOffline' },
         { reg: '^#?取消订阅掉线\\s+(\\d{5,12})$', fnc: 'unsubscribeOffline' },
         { reg: '^#?订阅掉线测试$', fnc: 'testOfflineSubscriptions' },
         { reg: '^#?掉线订阅列表$', fnc: 'listOfflineSubscriptions' }
       ]
     })
+  }
+
+  async helpOfflineSubscriptions (e) {
+    return e.reply([
+      '📮 QQ 掉线通知订阅帮助',
+      '',
+      '这个插件用于监控 QQ / NapCat / OneBot 掉线，掉线时自动发邮件，并在已订阅的群里提醒。',
+      '',
+      '✅ 订阅当前群 + 邮件：',
+      '#订阅掉线 监控QQ 收件邮箱',
+      '例：#订阅掉线 123456789 2408736708@qq.com',
+      '',
+      '✅ 订阅当前群 + 默认 QQ 邮箱：',
+      '#订阅掉线 监控QQ',
+      '例：#订阅掉线 123456789',
+      '不写邮箱时默认发送到：监控QQ@qq.com',
+      '',
+      '✅ 使用 @某人 的 QQ 邮箱作为收件人：',
+      '#订阅掉线 监控QQ @某人',
+      '例：#订阅掉线 123456789 @2408736708',
+      '实际收件邮箱会解析为：2408736708@qq.com',
+      '',
+      '🧪 测试邮件链路：',
+      '#订阅掉线测试',
+      '会给所有已订阅账号发送测试邮件。',
+      '',
+      '📋 查看订阅：',
+      '#掉线订阅列表',
+      '',
+      '❌ 取消订阅：',
+      '#取消订阅掉线 监控QQ',
+      '群里执行：优先取消当前群提醒；私聊或非当前群订阅时：取消该 QQ 的全部订阅。',
+      '',
+      '⚠️ 真实掉线触发：',
+      '当 Yunzai 的 OneBotV11 / NapCat 连接断开时，会触发掉线通知 hook，自动调用 global.DoneQQOfflineNotify。'
+    ].join('\n'))
   }
 
   async subscribeOffline (e) {
