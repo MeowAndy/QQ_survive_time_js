@@ -201,8 +201,7 @@ async function sendTestMail ({ qq, email }) {
     `监控账号：${qq}`,
     `发送时间：${now}`,
     '如果你能收到，说明 SMTP 和订阅邮箱链路正常。'
-  ].join('
-')
+  ].join('\n')
   const html = `
   <div style="font-family:Arial,'Microsoft YaHei',sans-serif;line-height:1.7">
     <h2>🧪 QQ 掉线测试邮件</h2>
@@ -364,8 +363,7 @@ export class DoneQQOfflineMail extends plugin {
       }
     }
     return e.reply(`🧪 掉线测试邮件已执行：
-${results.join('
-')}`)
+${results.join('\n')}`)
   }
 
   async unsubscribeOffline (e) {
