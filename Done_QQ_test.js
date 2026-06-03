@@ -73,11 +73,34 @@ function getAtQQList (e) {
     const qq = normalizeQQ(v)
     if (qq && !list.includes(qq)) list.push(qq)
   }
+
+  // 常见 Yunzai 字段
   if (Array.isArray(e?.at_list)) e.at_list.forEach(add)
   if (e?.at) add(e.at)
-  const raw = String(e?.msg || e?.message || '')
-  const matches = raw.match(/@(?:(\d{5,12})|\[CQ:at,qq=(\d{5,12})\])/g) || []
-  for (const item of matches) {
+
+  // OneBot / segment 结构：[{ type: 'at', qq: '...' }] 或 { data: { qq } }
+  const scanSegments = (segments) => {
+    if (!segments) return
+    const arr = Array.isArray(segments) ? segments : [...segments].filter(Boolean)
+    for (const seg of arr) {
+      if (!seg) continue
+      if (seg.type === 'at') add(seg.qq || seg.data?.qq || seg.data?.user_id)
+      if (seg.data?.type === 'at') add(seg.data?.qq || seg.data?.user_id)
+      if (seg.qq) add(seg.qq)
+    }
+  }
+  try { scanSegments(e?.message) } catch {}
+  try { scanSegments(e?.raw?.message) } catch {}
+
+  // 文本兜底：CQ 码 / @123456789
+  const raw = String(e?.msg || e?.raw_message || e?.message || '')
+  const cqMatches = raw.match(/\[CQ:at,qq=(\d{5,12})\]/g) || []
+  for (const item of cqMatches) {
+    const m = item.match(/qq=(\d{5,12})/)
+    if (m) add(m[1])
+  }
+  const plainMatches = raw.match(/@(\d{5,12})/g) || []
+  for (const item of plainMatches) {
     const m = item.match(/(\d{5,12})/)
     if (m) add(m[1])
   }
@@ -284,7 +307,7 @@ export class DoneQQOfflineMail extends plugin {
       event: 'message',
       priority: 500,
       rule: [
-        { reg: '^#?订阅掉线\\s+(\\d{5,12})(?:\\s+([^\\s]+@[^\\s]+))?$', fnc: 'subscribeOffline' },
+        { reg: '^#?订阅掉线\\s+(\\d{5,12})(?:\\s+.+)?$', fnc: 'subscribeOffline' },
         { reg: '^#?取消订阅掉线\\s+(\\d{5,12})$', fnc: 'unsubscribeOffline' },
         { reg: '^#?订阅掉线测试$', fnc: 'testOfflineSubscriptions' },
         { reg: '^#?掉线订阅列表$', fnc: 'listOfflineSubscriptions' }
@@ -295,6 +318,7 @@ export class DoneQQOfflineMail extends plugin {
   async subscribeOffline (e) {
     const match = e.msg?.match(/^#?订阅掉线\s+(\d{5,12})(?:\s+(.+))?$/)
     const qq = normalizeQQ(match?.[1])
+    const atQQForMail = getAtQQList(e)[0]
     const email = resolveRecipientEmail(e, qq, match?.[2])
     const groupId = getGroupId(e)
 
@@ -315,7 +339,8 @@ export class DoneQQOfflineMail extends plugin {
     saveData(data)
 
     const groupLine = groupId ? `\n👥 当前群已订阅：${groupId}` : '\n👥 当前是私聊，未绑定群通知'
-    return e.reply(`✅ 已订阅 QQ ${qq} 的掉线通知\n📮 收件邮箱：${email}${groupLine}`)
+    const atLine = atQQForMail ? `\n🎯 收件人来源：@${atQQForMail}` : ''
+    return e.reply(`✅ 已订阅 QQ ${qq} 的掉线通知\n📮 收件邮箱：${email}${atLine}${groupLine}`)
   }
 
   async testOfflineSubscriptions (e) {
