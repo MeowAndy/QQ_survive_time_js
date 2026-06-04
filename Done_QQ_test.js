@@ -125,6 +125,25 @@ function getOperatorId (e) {
   return String(e?.user_id || e?.sender?.user_id || e?.raw?.user_id || '')
 }
 
+function isMasterUser (e) {
+  if (e?.isMaster === true) return true
+  if (e?.isMaster === false) return false
+  const uid = getOperatorId(e)
+  const masters = new Set([
+    ...(Array.isArray(global?.Bot?.config?.masterQQ) ? global.Bot.config.masterQQ : []),
+    ...(Array.isArray(global?.Bot?.config?.master) ? global.Bot.config.master : []),
+    ...(Array.isArray(global?.Config?.masterQQ) ? global.Config.masterQQ : []),
+    ...(Array.isArray(global?.Config?.master) ? global.Config.master : [])
+  ].map(v => String(v)))
+  return uid && masters.has(uid)
+}
+
+function requireMaster (e) {
+  if (isMasterUser(e)) return true
+  e.reply('你不是主人哦~')
+  return false
+}
+
 function buildOfflineText ({ qq, reason, timeText }) {
   return [
     `⚠️ QQ 掉线通知`,
@@ -353,6 +372,7 @@ export class DoneQQOfflineMail extends plugin {
   }
 
   async subscribeOffline (e) {
+    if (!requireMaster(e)) return true
     const match = e.msg?.match(/^#?订阅掉线\s+(\d{5,12})(?:\s+(.+))?$/)
     const qq = normalizeQQ(match?.[1])
     const atQQForMail = getAtQQList(e)[0]
@@ -381,6 +401,7 @@ export class DoneQQOfflineMail extends plugin {
   }
 
   async testOfflineSubscriptions (e) {
+    if (!requireMaster(e)) return true
     const data = loadData()
     const entries = Object.entries(data.subscriptions)
     if (!entries.length) return e.reply('当前没有掉线通知订阅，无法测试。')
@@ -405,6 +426,7 @@ ${results.join('\n')}`)
   }
 
   async unsubscribeOffline (e) {
+    if (!requireMaster(e)) return true
     const match = e.msg?.match(/^#?取消订阅掉线\s+(\d{5,12})$/)
     const qq = normalizeQQ(match?.[1])
     const groupId = getGroupId(e)
@@ -428,6 +450,7 @@ ${results.join('\n')}`)
   }
 
   async listOfflineSubscriptions (e) {
+    if (!requireMaster(e)) return true
     const data = loadData()
     const entries = Object.entries(data.subscriptions)
     if (!entries.length) return e.reply('当前没有掉线通知订阅。')
