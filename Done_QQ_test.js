@@ -372,7 +372,6 @@ export class DoneQQOfflineMail extends plugin {
   }
 
   async subscribeOffline (e) {
-    if (!requireMaster(e)) return true
     const match = e.msg?.match(/^#?订阅掉线\s+(\d{5,12})(?:\s+(.+))?$/)
     const qq = normalizeQQ(match?.[1])
     const atQQForMail = getAtQQList(e)[0]
@@ -426,7 +425,6 @@ ${results.join('\n')}`)
   }
 
   async unsubscribeOffline (e) {
-    if (!requireMaster(e)) return true
     const match = e.msg?.match(/^#?取消订阅掉线\s+(\d{5,12})$/)
     const qq = normalizeQQ(match?.[1])
     const groupId = getGroupId(e)
