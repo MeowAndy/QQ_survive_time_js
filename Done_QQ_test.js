@@ -326,6 +326,7 @@ export class DoneQQOfflineMail extends plugin {
       event: 'message',
       priority: 500,
       rule: [
+        { reg: '^\\[?\\d{5,12}\\]?\\s*下线通知：你的帐号当前登录已失效，请重新登录。?$', fnc: 'handleOfflineTextMessage' },
         { reg: '^#?订阅掉线帮助$', fnc: 'helpOfflineSubscriptions' },
         { reg: '^#?订阅掉线\\s+(\\d{5,12})(?:\\s+.+)?$', fnc: 'subscribeOffline' },
         { reg: '^#?取消订阅掉线\\s+(\\d{5,12})$', fnc: 'unsubscribeOffline' },
@@ -333,6 +334,28 @@ export class DoneQQOfflineMail extends plugin {
         { reg: '^#?订阅掉线列表$', fnc: 'listOfflineSubscriptions' }
       ]
     })
+  }
+
+  async handleOfflineTextMessage (e) {
+    const msg = String(e.msg || e.raw_message || '').trim()
+    const match = msg.match(/^\[?(\d{5,12})\]?\s*下线通知：你的帐号当前登录已失效，请重新登录。?$/)
+    const qq = normalizeQQ(match?.[1])
+    if (!qq) return false
+    logger?.mark?.(`[${PLUGIN_NAME}] 捕获文本下线通知：${qq}`)
+    await sendOfflineNotifications({
+      qq,
+      reason: msg,
+      raw: {
+        post_type: 'message',
+        message_type: e?.message_type,
+        self_id: e?.self_id,
+        user_id: e?.user_id,
+        group_id: e?.group_id,
+        message: msg
+      },
+      bot: e?.bot
+    })
+    return false
   }
 
   async helpOfflineSubscriptions (e) {
