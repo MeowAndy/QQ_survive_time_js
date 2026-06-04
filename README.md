@@ -90,3 +90,94 @@ await e.reply(`啾？菲比已经啾咪${duration}啦～`)
 ## 文件
 
 - `feibi-jiumi-nickname.js`：插件本体。
+
+---
+
+# QQ 掉线邮件群通知插件
+
+仓库内另包含：
+
+- `Done_QQ_test.js`：订阅 QQ 掉线通知，掉线时发送邮件 + 群通知。
+- `patch-yunzai-bot-offline-notify.js`：把 TRSS-Yunzai 原生 `bot_offline` 下线通知源头接入 `Done_QQ_test.js` 的邮件/群通知函数。
+
+## 安装掉线通知插件
+
+把插件放到 Yunzai：
+
+```bash
+cp Done_QQ_test.js /root/Yunzai/plugins/example/Done_QQ_test.js
+cd /root/Yunzai
+pnpm add nodemailer
+```
+
+SMTP 不建议写进公开仓库。生产环境请用环境变量配置：
+
+```bash
+export YZ_OFFLINE_MAIL_HOST=smtp.qq.com
+export YZ_OFFLINE_MAIL_PORT=465
+export YZ_OFFLINE_MAIL_SECURE=true
+export YZ_OFFLINE_MAIL_USER=发件邮箱@qq.com
+export YZ_OFFLINE_MAIL_PASS=邮箱 SMTP 授权码
+export YZ_OFFLINE_MAIL_FROM='掉线通知 <发件邮箱@qq.com>'
+```
+
+## 指令
+
+默认仓库版使用 `#` 前缀：
+
+```text
+#订阅掉线帮助
+#订阅掉线 QQ [邮箱/@QQ]
+#取消订阅掉线 QQ
+#订阅掉线测试
+#订阅掉线列表
+```
+
+权限：
+
+- 非主人也可以使用：`#订阅掉线 QQ [邮箱/@QQ]`、`#取消订阅掉线 QQ`
+- 仅主人可用：`#订阅掉线测试`、`#订阅掉线列表`
+- 帮助所有人可看：`#订阅掉线帮助`
+
+> 如果要做多实例区分，例如菲比用 `#`、凌阳用 `%`，请只在目标服务器本地修改指令前缀，不要把本地私有变体推到仓库。
+
+## 接入 Yunzai 原生下线通知源头
+
+仅安装插件后，插件可以通过 notice / 文本兜底捕获部分掉线事件；但更稳的方式是接入 TRSS-Yunzai 原生 `bot_offline` 逻辑，也就是 Yunzai 自己给主人发送：
+
+```text
+[QQ号] 下线通知：你的帐号当前登录已失效，请重新登录。
+```
+
+或“账号已在另一台终端登录”等提示的源码位置。
+
+在 Yunzai 根目录执行：
+
+```bash
+cp patch-yunzai-bot-offline-notify.js /root/Yunzai/patch-yunzai-bot-offline-notify.js
+cd /root/Yunzai
+node patch-yunzai-bot-offline-notify.js
+node --check plugins/adapter/OneBotv11.js
+```
+
+然后重启 Yunzai。
+
+这个补丁会修改：
+
+```text
+plugins/adapter/OneBotv11.js
+```
+
+在 `case "bot_offline"` 的 `Bot.sendMasterMsg(...)` 旁边调用：
+
+```js
+global.DoneQQOfflineNotify({ qq, reason, raw, bot })
+```
+
+这样 Yunzai 原生识别到账号下线 / 登录失效 / 异地登录时，会在通知主人的同时触发邮件和群通知。
+
+补丁脚本会自动备份原文件，备份名类似：
+
+```text
+plugins/adapter/OneBotv11.js.bak-doneqq-bot-offline-YYYYMMDDHHMMSS
+```
