@@ -5,7 +5,7 @@
 //   #订阅掉线帮助
 //   #订阅掉线 QQ [QQ邮箱]
 //   #取消订阅掉线 QQ
-//   #掉线订阅列表
+//   #订阅掉线列表
 //
 // 行为：
 // - 在群里执行 #订阅掉线，会把“当前群”加入该 QQ 的掉线通知群。
@@ -311,7 +311,7 @@ export class DoneQQOfflineMail extends plugin {
         { reg: '^#?订阅掉线\\s+(\\d{5,12})(?:\\s+.+)?$', fnc: 'subscribeOffline' },
         { reg: '^#?取消订阅掉线\\s+(\\d{5,12})$', fnc: 'unsubscribeOffline' },
         { reg: '^#?订阅掉线测试$', fnc: 'testOfflineSubscriptions' },
-        { reg: '^#?掉线订阅列表$', fnc: 'listOfflineSubscriptions' }
+        { reg: '^#?订阅掉线列表$', fnc: 'listOfflineSubscriptions' }
       ]
     })
   }
@@ -341,7 +341,7 @@ export class DoneQQOfflineMail extends plugin {
       '会给所有已订阅账号发送测试邮件。',
       '',
       '📋 查看订阅：',
-      '#掉线订阅列表',
+      '#订阅掉线列表',
       '',
       '❌ 取消订阅：',
       '#取消订阅掉线 监控QQ',
